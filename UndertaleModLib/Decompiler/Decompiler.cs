@@ -49,6 +49,7 @@ namespace UndertaleModLib.Decompiler
         {
             public abstract override string ToString();
             internal abstract AssetIDType DoTypePropagation(AssetIDType suggestedType);
+            public abstract bool SemicolonIfPrimary();
         }
 
         public abstract class Expression : Statement
@@ -114,6 +115,11 @@ namespace UndertaleModLib.Decompiler
             internal virtual bool IsDuplicationSafe()
             {
                 return false;
+            }
+
+            public override bool SemicolonIfPrimary()
+            {
+                return true;
             }
         }
 
@@ -280,6 +286,11 @@ namespace UndertaleModLib.Decompiler
                     AssetType = suggestedType;
                 return AssetType;
             }
+
+            public override bool SemicolonIfPrimary()
+            {
+                return true;
+            }
         }
 
         public class ExpressionCast : Expression
@@ -306,6 +317,11 @@ namespace UndertaleModLib.Decompiler
             internal override AssetIDType DoTypePropagation(AssetIDType suggestedType)
             {
                 return Argument.DoTypePropagation(suggestedType);
+            }
+
+            public override bool SemicolonIfPrimary()
+            {
+                return true;
             }
         }
 
@@ -337,6 +353,11 @@ namespace UndertaleModLib.Decompiler
             internal override AssetIDType DoTypePropagation(AssetIDType suggestedType)
             {
                 return Argument.DoTypePropagation(suggestedType);
+            }
+
+            public override bool SemicolonIfPrimary()
+            {
+                return true;
             }
         }
         
@@ -372,6 +393,11 @@ namespace UndertaleModLib.Decompiler
                 Argument2.DoTypePropagation(AssetIDType.Other);
                 return t;
             }
+
+            public override bool SemicolonIfPrimary()
+            {
+                return true;
+            }
         }
 
         public class ExpressionCompare : Expression
@@ -404,6 +430,11 @@ namespace UndertaleModLib.Decompiler
                 Argument2.DoTypePropagation(Argument1.DoTypePropagation(suggestedType));
                 return AssetIDType.Other;
             }
+
+            public override bool SemicolonIfPrimary()
+            {
+                return true;
+            }
         }
 
         public class OperationStatement : Statement
@@ -423,6 +454,11 @@ namespace UndertaleModLib.Decompiler
             internal override AssetIDType DoTypePropagation(AssetIDType suggestedType)
             {
                 return suggestedType;
+            }
+
+            public override bool SemicolonIfPrimary()
+            {
+                return true;
             }
         }
 
@@ -483,6 +519,11 @@ namespace UndertaleModLib.Decompiler
                     Var.Var.AssetType = suggestedType;
                 return Value.DoTypePropagation(Var.Var.AssetType);
             }
+
+            public override bool SemicolonIfPrimary()
+            {
+                return true;
+            }
         }
 
         public class ExpressionTempVar : Expression
@@ -537,6 +578,11 @@ namespace UndertaleModLib.Decompiler
             {
                 return Value?.DoTypePropagation(suggestedType) ?? suggestedType;
             }
+
+            public override bool SemicolonIfPrimary()
+            {
+                return true;
+            }
         }
 
         public class AssignmentStatement : Statement
@@ -559,6 +605,11 @@ namespace UndertaleModLib.Decompiler
             {
                 return Value.DoTypePropagation(Destination.DoTypePropagation(suggestedType));
             }
+
+            public override bool SemicolonIfPrimary()
+            {
+                return true;
+            }
         }
 
         public class CommentStatement : Statement
@@ -578,6 +629,11 @@ namespace UndertaleModLib.Decompiler
             internal override AssetIDType DoTypePropagation(AssetIDType suggestedType)
             {
                 return suggestedType;
+            }
+
+            public override bool SemicolonIfPrimary()
+            {
+                return false;
             }
         }
 
@@ -630,6 +686,11 @@ namespace UndertaleModLib.Decompiler
                     Arguments[i].DoTypePropagation(args[i]);
                 }
                 return suggestedType; // TODO: maybe we should handle returned values too?
+            }
+
+            public override bool SemicolonIfPrimary()
+            {
+                return true;
             }
         }
 
@@ -748,6 +809,11 @@ namespace UndertaleModLib.Decompiler
 
             public bool NeedsArrayParameters => VarType == UndertaleInstruction.VariableType.Array;
             public bool NeedsInstanceParameters => /*InstType == UndertaleInstruction.InstanceType.StackTopOrGlobal &&*/ VarType == UndertaleInstruction.VariableType.StackTop;
+
+            public override bool SemicolonIfPrimary()
+            {
+                return true;
+            }
         }
 
         public class PushEnvStatement : Statement
@@ -769,6 +835,11 @@ namespace UndertaleModLib.Decompiler
                 NewEnv.DoTypePropagation(AssetIDType.GameObject);
                 return suggestedType;
             }
+
+            public override bool SemicolonIfPrimary()
+            {
+                return true;
+            }
         }
 
         public class PopEnvStatement : Statement
@@ -781,6 +852,11 @@ namespace UndertaleModLib.Decompiler
             internal override AssetIDType DoTypePropagation(AssetIDType suggestedType)
             {
                 return suggestedType;
+            }
+
+            public override bool SemicolonIfPrimary()
+            {
+                return true;
             }
         }
 
@@ -1184,26 +1260,30 @@ namespace UndertaleModLib.Decompiler
 
             public string ToString(bool canSkipBrackets = true)
             {
-                if (Statements.Count == 1 && !(Statements[0] is IfHLStatement) && !(Statements[0] is LoopHLStatement) && !(Statements[0] is WithHLStatement) && canSkipBrackets)
-                    return "    " + Statements[0].ToString().Replace("\n", "\n    ");
-                else
+                StringBuilder sb = new StringBuilder();
+                sb.Append("{\n");
+                foreach(var stmt in Statements)
                 {
-                    StringBuilder sb = new StringBuilder();
-                    sb.Append("{\n");
-                    foreach(var stmt in Statements)
+                    sb.Append("    ");
+                    sb.Append(stmt.ToString().Replace("\n", "\n    "));
+                    if (stmt.SemicolonIfPrimary())
                     {
-                        sb.Append("    ");
-                        sb.Append(stmt.ToString().Replace("\n", "\n    "));
-                        sb.Append("\n");
+                        sb.Append(";");
                     }
-                    sb.Append("}");
-                    return sb.ToString();
+                    sb.Append("\n");
                 }
+                sb.Append("}");
+                return sb.ToString();
             }
 
             public override string ToString()
             {
                 return ToString(true);
+            }
+
+            public override bool SemicolonIfPrimary()
+            {
+                return false;
             }
         };
 
@@ -1218,12 +1298,25 @@ namespace UndertaleModLib.Decompiler
                 StringBuilder sb = new StringBuilder();
                 sb.Append("if " + condition.ToString() + "\n");
                 sb.Append(trueBlock.ToString());
+                if (trueBlock.SemicolonIfPrimary())
+                {
+                    sb.Append(';');
+                }
                 if (falseBlock != null && falseBlock.Statements.Count > 0)
                 {
                     sb.Append("\nelse\n");
                     sb.Append(falseBlock.ToString());
+                    if (trueBlock.SemicolonIfPrimary())
+                    {
+                        sb.Append(';');
+                    }
                 }
                 return sb.ToString();
+            }
+
+            public override bool SemicolonIfPrimary()
+            {
+                return false;
             }
         };
 
@@ -1233,7 +1326,12 @@ namespace UndertaleModLib.Decompiler
 
             public override string ToString()
             {
-                return "while(true)\n" + Block.ToString();
+                return "while(true)\n" + Block.ToString() + (Block.SemicolonIfPrimary() ? ";" : "");
+            }
+
+            public override bool SemicolonIfPrimary()
+            {
+                return false;
             }
         };
 
@@ -1243,6 +1341,11 @@ namespace UndertaleModLib.Decompiler
             {
                 return "continue";
             }
+
+            public override bool SemicolonIfPrimary()
+            {
+                return true;
+            }
         }
 
         public class BreakHLStatement : HLStatement
@@ -1250,6 +1353,11 @@ namespace UndertaleModLib.Decompiler
             public override string ToString()
             {
                 return "break";
+            }
+
+            public override bool SemicolonIfPrimary()
+            {
+                return true;
             }
         }
 
@@ -1261,6 +1369,11 @@ namespace UndertaleModLib.Decompiler
             public override string ToString()
             {
                 return "with(" + NewEnv.ToString() + ")\n" + Block.ToString(false);
+            }
+
+            public override bool SemicolonIfPrimary()
+            {
+                return false;
             }
         }
 
@@ -1288,6 +1401,11 @@ namespace UndertaleModLib.Decompiler
                 }
                 sb.Append("}\n");
                 return sb.ToString();
+            }
+
+            public override bool SemicolonIfPrimary()
+            {
+                return false;
             }
         }
 
@@ -1318,8 +1436,13 @@ namespace UndertaleModLib.Decompiler
                     sb.Append("    ");
                     sb.Append(Block.ToString(false).Replace("\n", "\n    ") + "\n");
                 }
-                sb.Append("    break\n");
+                sb.Append("    break;\n");
                 return sb.ToString();
+            }
+
+            public override bool SemicolonIfPrimary()
+            {
+                return false;
             }
         }
 
@@ -1750,7 +1873,32 @@ namespace UndertaleModLib.Decompiler
             }
 
             foreach (var stmt in stmts)
-                sb.Append(stmt.ToString() + "\n");
+            {
+                sb.Append(stmt.ToString());
+                if (stmt.SemicolonIfPrimary())
+                {
+                    sb.Append(';');
+                }
+                sb.Append('\n');
+            }
+
+            int newlineCount = 0;
+            for (int index = sb.Length; index > 0; --index)
+            {
+                if (sb[index - 1] == '\n')
+                    ++newlineCount;
+                else
+                    break;
+            }
+            if (newlineCount == 0)
+            {
+                sb.Append('\n');
+            }
+            else
+            {
+                sb.Remove(sb.Length - newlineCount - 1, newlineCount - 1);
+            }
+
             return sb.ToString();
         }
 
