@@ -452,12 +452,12 @@ namespace UndertaleModLib.Decompiler
             }
         }
 
-        public class TempVarAssigmentStatement : Statement
+        public class TempVarAssignmentStatement : Statement
         {
             public TempVarReference Var;
             public Expression Value;
 
-            public TempVarAssigmentStatement(TempVarReference var, Expression value)
+            public TempVarAssignmentStatement(TempVarReference var, Expression value)
             {
                 Var = var;
                 Value = value;
@@ -829,7 +829,7 @@ namespace UndertaleModLib.Decompiler
                                 TempVar var = new TempVar();
                                 var.Type = item.Type;
                                 TempVarReference varref = new TempVarReference(var);
-                                statements.Add(new TempVarAssigmentStatement(varref, item));
+                                statements.Add(new TempVarAssignmentStatement(varref, item));
 
                                 topExpressions1.Add(new ExpressionTempVar(varref, varref.Var.Type));
                                 topExpressions2.Add(new ExpressionTempVar(varref, instr.Type1));
@@ -994,7 +994,7 @@ namespace UndertaleModLib.Decompiler
                 {
                     Expression val = stack.Pop();
                     if (!(val is ExpressionTempVar) || (val as ExpressionTempVar).Var != tempvars[i] )
-                        statements.Add(new TempVarAssigmentStatement(tempvars[i], val));
+                        statements.Add(new TempVarAssignmentStatement(tempvars[i], val));
                     leftovers.Add(tempvars[i]);
                 }
                 else
@@ -1003,7 +1003,7 @@ namespace UndertaleModLib.Decompiler
                     TempVar var = new TempVar();
                     var.Type = val.Type;
                     TempVarReference varref = new TempVarReference(var);
-                    statements.Add(new TempVarAssigmentStatement(varref, val));
+                    statements.Add(new TempVarAssignmentStatement(varref, val));
                     leftovers.Add(varref);
                 }
             }
@@ -1479,11 +1479,11 @@ namespace UndertaleModLib.Decompiler
             bool? ifFalseThen = null;
             if (!entryBlock.nextBlockTrue.conditionalExit && entryBlock.nextBlockTrue.Statements.Count == 1)
             {
-                ifTrueThen = ((short)((entryBlock.nextBlockTrue.Statements[0] as TempVarAssigmentStatement)?.Value as ExpressionConstant).Value) != 0;
+                ifTrueThen = ((short)((entryBlock.nextBlockTrue.Statements[0] as TempVarAssignmentStatement)?.Value as ExpressionConstant).Value) != 0;
             }
             if (!entryBlock.nextBlockFalse.conditionalExit && entryBlock.nextBlockFalse.Statements.Count == 1)
             {
-                ifFalseThen = ((short)((entryBlock.nextBlockFalse.Statements[0] as TempVarAssigmentStatement)?.Value as ExpressionConstant).Value) != 0;
+                ifFalseThen = ((short)((entryBlock.nextBlockFalse.Statements[0] as TempVarAssignmentStatement)?.Value as ExpressionConstant).Value) != 0;
             }
         }*/
 
@@ -1516,7 +1516,7 @@ namespace UndertaleModLib.Decompiler
                 //output.Statements.Add(new CommentStatement("At block " + block.Address));
                 if (alreadyVisited.Contains(block))
                 {
-                    if (block.Statements.Count == 1 && block.Statements[0] is TempVarAssigmentStatement)
+                    if (block.Statements.Count == 1 && block.Statements[0] is TempVarAssignmentStatement)
                     {
                         // TODO: This is to be expected for now, multi-level ifs are not handled well...
                     }
@@ -1534,11 +1534,11 @@ namespace UndertaleModLib.Decompiler
                     if (!(stmt is PushEnvStatement) && !(stmt is PopEnvStatement))
                         output.Statements.Add(stmt);
 
-                if (output.Statements.Count >= 1 && output.Statements[output.Statements.Count - 1] is TempVarAssigmentStatement && block.Instructions[block.Instructions.Count - 1].Kind == UndertaleInstruction.Opcode.Bt && block.conditionalExit && block.ConditionStatement is ExpressionCompare && (block.ConditionStatement as ExpressionCompare).Opcode == UndertaleInstruction.ComparisonType.EQ)
+                if (output.Statements.Count >= 1 && output.Statements[output.Statements.Count - 1] is TempVarAssignmentStatement && block.Instructions[block.Instructions.Count - 1].Kind == UndertaleInstruction.Opcode.Bt && block.conditionalExit && block.ConditionStatement is ExpressionCompare && (block.ConditionStatement as ExpressionCompare).Opcode == UndertaleInstruction.ComparisonType.EQ)
                 {
                     // This is a switch statement!
-                    Expression switchExpression = (output.Statements[output.Statements.Count - 1] as TempVarAssigmentStatement).Value;
-                    TempVar switchTempVar = (output.Statements[output.Statements.Count - 1] as TempVarAssigmentStatement).Var.Var;
+                    Expression switchExpression = (output.Statements[output.Statements.Count - 1] as TempVarAssignmentStatement).Value;
+                    TempVar switchTempVar = (output.Statements[output.Statements.Count - 1] as TempVarAssignmentStatement).Var.Var;
                     output.Statements.RemoveAt(output.Statements.Count - 1);
 
                     Block meetPoint = FindFirstMeetPoint(block, reverseDominators);
