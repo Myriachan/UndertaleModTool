@@ -218,8 +218,15 @@ namespace UndertaleModLib.Decompiler
 
                 if (AssetType == AssetIDType.Color && Value is IFormattable)
                 {
-                    uint val = Convert.ToUInt32(Value);
-                    return "0x" + ((IFormattable)Value).ToString(val > 0xFFFFFF ? "X8" : "X6", CultureInfo.InvariantCulture);
+                    int val = Convert.ToInt32(Value);
+                    if (Enum.IsDefined(typeof(ColorConstant), val))
+                    {
+                        return ((ColorConstant)val).ToString();
+                    }
+                    else
+                    {
+                        return "0x" + ((IFormattable)Value).ToString(val > 0xFFFFFF ? "X8" : "X6", CultureInfo.InvariantCulture);
+                    }
                 }
 
                 if (AssetType == AssetIDType.KeyboardKey)

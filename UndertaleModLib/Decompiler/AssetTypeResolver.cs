@@ -31,6 +31,30 @@ namespace UndertaleModLib.Decompiler
         Layer // GMS2
     };
 
+    // https://docs.yoyogames.com/source/dadiospice/002_reference/drawing/colour%20and%20blending/index.html
+    public enum ColorConstant : int
+    {
+        c_aqua = 0xFFFF00,
+        c_black = 0x000000,
+        c_blue = 0xFF0000,
+        c_dkgray = 0x404040,
+        c_fuchsia = 0xFF00FF,
+        c_gray = 0x808080,
+        c_green = 0x008000,
+        c_lime = 0x00FF00,
+        c_ltgray = 0xC0C0C0,
+        c_maroon = 0x000080,
+        c_navy = 0x800000,
+        c_olive = 0x008080,
+        c_orange = 0x40A0FF,
+        c_purple = 0x800080,
+        c_red = 0x0000FF,
+        //c_silver = 0xC0C0C0,  same as c_ltgray
+        c_teal = 0x808000,
+        c_white = 0xFFFFFF,
+        c_yellow = 0x00FFFF,
+    };
+
     public enum HAlign : int
     {
         fa_left = 0,
