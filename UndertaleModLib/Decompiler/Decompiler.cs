@@ -232,10 +232,11 @@ namespace UndertaleModLib.Decompiler
                 if (AssetType == AssetIDType.KeyboardKey)
                 {
                     int val = Convert.ToInt32(Value);
-                    if (!Char.IsControl((char)val) && !Char.IsLower((char)val)) // The special keys overlay with the uppercase letters (ugh)
-                        return "'" + (char)val + "'";
+                    if (((val >= '0') && (val <= '9')) || ((val >= 'A') && (val <= 'Z')))
+                        return "ord(\"" + ((char)val).ToString() + "\")";
                     if (val > 0 && Enum.IsDefined(typeof(EventSubtypeKey), (uint)val))
                         return ((EventSubtypeKey)val).ToString();
+                    return val.ToString();
                 }
 
                 return ((Value as IFormattable)?.ToString(null, CultureInfo.InvariantCulture) ?? Value.ToString());
