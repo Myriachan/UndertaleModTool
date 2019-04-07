@@ -7,6 +7,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using UndertaleModLib.Models;
 
@@ -130,6 +131,37 @@ namespace UndertaleModLib.Decompiler
             internal override bool IsDuplicationSafe()
             {
                 return true;
+            }
+
+            internal bool IsSpecifiedInstanceType(UndertaleInstruction.InstanceType type)
+            {
+                if (AssetType == AssetIDType.GameObject)
+                {
+                    int val;
+                    try
+                    {
+                        val = Convert.ToInt32(Value);
+                    }
+                    catch (OverflowException)
+                    {
+                        val = Int32.MaxValue;
+                    }
+                    if (val < 0)
+                    {
+                        return ((UndertaleInstruction.InstanceType)val) == type;
+                    }
+                }
+                return false;
+            }
+
+            public bool IsSelf()
+            {
+                return IsSpecifiedInstanceType(UndertaleInstruction.InstanceType.Self);
+            }
+
+            public bool IsLocal()
+            {
+                return IsSpecifiedInstanceType(UndertaleInstruction.InstanceType.Local);
             }
 
             public override string ToString()
@@ -591,6 +623,36 @@ namespace UndertaleModLib.Decompiler
 
         public class ExpressionVar : Expression
         {
+            private static readonly Regex globalVariableRegex = new Regex("^(" +
+                @"application_surface" +
+                @"|argument(s|_count|\d+)?" +
+                @"|async_load" +
+                @"|background_(index|visible|alpha|blend|x|y|colou?r|showcolou?r|foreground|[hv]speed|[hv]tiled|width|height|[xy]scale)" +
+                @"|browser_(width|height)" +
+                @"|cursor_sprite" +
+                @"|current_(day|hour|minute|month|second|time|weekday|year)" +
+                @"|debug_mode" +
+                @"|delta_time" +
+                @"|display_aa" +
+                @"|error_(occurred|last)" +
+                @"|event_(data|type|number|object|action)" +
+                @"|font_texture_page_size" +
+                @"|fps(_real)?" +
+                @"|game_(display_name|id|project_name|save_id)" +
+                @"|gamemaker_(pro|registered|version)" +
+                @"|GM_(build_date|runtime_version|version)" +
+                @"|iap_data" +
+                @"|instance_(count|id)" +
+                @"|keyboard_(key|lastkey|lastchar|string)" +
+                @"|mouse_(x|y|button|last_button)" +
+                @"|os_(browser|device|type|version)" +
+                @"|room(_(speed|width|height|first|last|next|previous|persistent|caption))?" +
+                @"|undefined" +
+                @"|view_([whxy]port|camera|current|enabled|surface_id|visible)" +
+                @"|webgl_enabled" +
+                @"|(working|temp|program)_directory" +
+                ")$");
+
             public UndertaleVariable Var;
             public Expression InstType; // UndertaleInstruction.InstanceType
             public UndertaleInstruction.VariableType VarType;
@@ -641,6 +703,17 @@ namespace UndertaleModLib.Decompiler
                 if (ArrayIndex2 != null)
                     name = name + "[" + ArrayIndex2.ToString() + "]";
                 name = InstType.ToString() + "." + name;
+
+                if ((InstType is ExpressionConstant) && ((ExpressionConstant)InstType).IsLocal())
+                {
+                }
+                else if ((InstType is ExpressionConstant) && ((ExpressionConstant)InstType).IsSelf() && globalVariableRegex.IsMatch(Var.Name.Content))
+                {
+                }
+                else
+                {
+                    name = InstType.ToString() + "." + name;
+                }
 
                 return name;
             }
