@@ -429,16 +429,25 @@ namespace UndertaleModLib.Decompiler
 
         public class TempVar
         {
+            public int Id;
             public string Name;
             public UndertaleInstruction.DataType Type;
+            internal AssetIDType AssetType;
 
             [ThreadStatic]
             public static int i;
-            internal AssetIDType AssetType;
+            [ThreadStatic]
+            public static List<int> Referenced;
 
             public TempVar()
             {
-                Name = "_temp_local_var_" + (++i);
+                Id = ++i;
+                Name = MakeName(Id);
+            }
+
+            public static string MakeName(int id)
+            {
+                return "_temp_local_var_" + id;
             }
         }
 
@@ -498,6 +507,9 @@ namespace UndertaleModLib.Decompiler
 
             internal override AssetIDType DoTypePropagation(AssetIDType suggestedType)
             {
+                // HACK: Hackity hack hack
+                TempVar.Referenced.Add(Var.Var.Id);
+
                 if (Var.Var.AssetType == AssetIDType.Other)
                     Var.Var.AssetType = suggestedType;
                 return Var.Var.AssetType;
@@ -1695,6 +1707,7 @@ namespace UndertaleModLib.Decompiler
         {
             HUGE_HACK_FIX_THIS_SOON = data;
             TempVar.i = 0;
+            TempVar.Referenced = new List<int>();
             ExpressionVar.assetTypes = new Dictionary<UndertaleVariable, AssetIDType>();
             Dictionary<uint, Block> blocks = PrepareDecompileFlow(code);
             DecompileFromBlock(blocks[0]);
@@ -1703,6 +1716,39 @@ namespace UndertaleModLib.Decompiler
             DoTypePropagation(blocks);
             List<Statement> stmts = HLDecompile(blocks, blocks[0], blocks[code.Length / 4]);
             StringBuilder sb = new StringBuilder();
+
+            IList<UndertaleVariable> localVars = code.FindReferencedLocalVars();
+            TempVar.Referenced.Sort();
+            bool localVarDefined = false;
+            foreach (UndertaleVariable localVar in localVars)
+            {
+                if (localVar.Name.Content != "arguments")
+                {
+                    sb.Append("var ");
+                    sb.Append(localVar.Name.Content);
+                    sb.Append(";\n");
+                    localVarDefined = true;
+                }
+            }
+            bool firstTempVar = true;
+            int previousTempVarId = 0;
+            foreach (int id in TempVar.Referenced)
+            {
+                if (firstTempVar || (id != previousTempVarId))
+                {
+                    sb.Append("var ");
+                    sb.Append(TempVar.MakeName(id));
+                    sb.Append(";\n");
+                    previousTempVarId = id;
+                    firstTempVar = false;
+                    localVarDefined = true;
+                }
+            }
+            if (localVarDefined)
+            {
+                sb.Append('\n');
+            }
+
             foreach (var stmt in stmts)
                 sb.Append(stmt.ToString() + "\n");
             return sb.ToString();
