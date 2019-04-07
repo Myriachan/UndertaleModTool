@@ -44,7 +44,38 @@ namespace UndertaleModLib.Models
 
         public override string ToString()
         {
-            return "\"" + Content + "\"";
+            StringBuilder sb = new StringBuilder();
+            sb.Append('"');
+
+            for (int index = 0; index < Content.Length; ++index)
+            {
+                char ch = Content[index];
+                switch (ch)
+                {
+                    case '\r':
+                        sb.Append('\\');
+                        sb.Append('r');
+                        break;
+                    case '\n':
+                        sb.Append('\\');
+                        sb.Append('n');
+                        break;
+                    case '\\':
+                        sb.Append('\\');
+                        sb.Append('\\');
+                        break;
+                    case '"':
+                        sb.Append('\\');
+                        sb.Append('"');
+                        break;
+                    default:
+                        sb.Append(ch);
+                        break;
+                }
+            }
+
+            sb.Append('"');
+            return sb.ToString();
         }
 
         public bool SearchMatches(string filter)
