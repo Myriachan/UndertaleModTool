@@ -47,28 +47,39 @@ namespace UndertaleModLib.Decompiler
 
     public enum OSType : int
     {
+        os_unknown = -1,
         os_windows = 0,
-        os_uwp = 18,
-        os_linux = 6,
         os_macosx = 1,
+        os_psp = 2,
         os_ios = 3,
         os_android = 4,
-        os_ps3 = 16,
-        os_ps4 = 14,
-        os_psvita = 12,
-        os_xbox = 15,
-        os_unknown = -1,
-        os_3ds = 11,
-        os_bb10 = 13,
-        os_psp = 2,
         os_symbian = 5,
+        os_linux = 6,
+        os_winphone = 7,
         os_tizen = 8,
-        os_wiiu = 10,
         os_win8native = 9,
-        os_xbox360 = 17,
+        os_wiiu = 10,
+        os_3ds = 11,
+        os_psvita = 12,
+        os_bb10 = 13,
+        os_ps4 = 14,
         os_xboxone = 15,
-        os_switch_beta = 20, // this one was used while switch support was in beta and changed later?
+        os_ps3 = 16,
+        os_xbox360 = 17,
+        os_uwp = 18,
+        // 20 is os_tvos now, but in Switch Undertale, it was os_switch.
+        // Because this is UndertaleModTool, call this os_switch_beta.
+        //os_tvos = 20,
+        os_switch_beta = 20,
         os_switch = 21,
+        os_llvm_win32 = 65536,
+        os_llvm_macosx = 65537,
+        os_llvm_psp = 65538,
+        os_llvm_ios = 65539,
+        os_llvm_android = 65540,
+        os_llvm_symbian = 65541,
+        os_llvm_linux = 65542,
+        os_llvm_winphone = 65543,
     }
 
     public enum GamepadButton : int
