@@ -805,7 +805,7 @@ namespace UndertaleModLib.Decompiler
             foreach(var instr in block.Instructions)
             {
                 if (end)
-                    throw new Exception("Excepted end of block, but still has instructions");
+                    throw new Exception("Expected end of block, but still has instructions");
                 switch(instr.Kind)
                 {
                     case UndertaleInstruction.Opcode.Neg:
