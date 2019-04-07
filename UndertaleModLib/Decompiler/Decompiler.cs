@@ -698,11 +698,10 @@ namespace UndertaleModLib.Decompiler
                 //Debug.Assert((ArrayIndex != null) == NeedsArrayParameters);
                 //Debug.Assert((InstanceIndex != null) == NeedsInstanceParameters);
                 string name = Var.Name.Content;
-                if (ArrayIndex1 != null)
+                if (ArrayIndex1 != null && ArrayIndex2 != null)
+                    name = name + "[" + ArrayIndex1.ToString() + ", " + ArrayIndex2.ToString() + "]";
+                else if (ArrayIndex1 != null)
                     name = name + "[" + ArrayIndex1.ToString() + "]";
-                if (ArrayIndex2 != null)
-                    name = name + "[" + ArrayIndex2.ToString() + "]";
-                name = InstType.ToString() + "." + name;
 
                 if ((InstType is ExpressionConstant) && ((ExpressionConstant)InstType).IsLocal())
                 {
